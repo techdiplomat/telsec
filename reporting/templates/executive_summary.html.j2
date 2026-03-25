@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Executive Summary — TelSec</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 40px; background: #f8fafc; color: #1e293b; }
+  .cover { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: white; padding: 50px; border-radius: 12px; margin-bottom: 40px; }
+  .cover h1 { font-size: 2.5rem; margin: 0 0 8px; }
+  .cover .sub { color: #90caf9; font-size: 1.1rem; margin-bottom: 20px; }
+  .risk-box { display: inline-block; background: {% if report.risk_score >= 70 %}#dc2626{% elif report.risk_score >= 40 %}#d97706{% else %}#16a34a{% endif %}; color: white; padding: 12px 28px; border-radius: 30px; font-size: 2rem; font-weight: 800; }
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+  .stat { background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .num { font-size: 2.5rem; font-weight: 800; }
+  .label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
+  .c { color: #dc2626; } .h { color: #ea580c; } .m { color: #d97706; } .l { color: #2563eb; }
+  .top-finding { background: white; border-left: 4px solid #dc2626; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; border-bottom: 2px solid #0f3460; padding-bottom: 6px; margin: 30px 0 16px; }
+  footer { text-align: center; color: #94a3b8; font-size: 0.75rem; margin-top: 50px; }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div style="font-size:0.75rem;color:#90caf9;margin-bottom:4px;">{{ report.classification }}</div>
+  <h1>Executive Summary</h1>
+  <div class="sub">{{ report.title }}</div>
+  <div><b>{{ report.company }}</b> | {{ report.generated_at }}</div>
+  <div style="margin-top:20px"><div class="risk-box">Risk Score {{ report.risk_score }}/100</div></div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="num c">{{ report.critical_count }}</div><div class="label">Critical</div></div>
+  <div class="stat"><div class="num h">{{ report.high_count }}</div><div class="label">High</div></div>
+  <div class="stat"><div class="num m">{{ report.medium_count }}</div><div class="label">Medium</div></div>
+  <div class="stat"><div class="num l">{{ report.low_count }}</div><div class="label">Low</div></div>
+</div>
+
+<div class="section-title">Key Findings</div>
+{% for f in report.top_findings[:5] %}
+<div class="top-finding" style="border-left-color:{{ f.severity | severity_color }}">
+  <b>[{{ f.test_id }}] {{ f.name }}</b> — <span style="color:{{ f.severity | severity_color }};font-weight:700">{{ f.severity.value }}</span> | CVSS {{ f.cvss_score }}
+  <div style="color:#475569;font-size:0.9rem;margin-top:4px;">{{ f.finding[:200] }}...</div>
+  <div style="color:#16a34a;font-size:0.85rem;margin-top:4px;"><b>Action:</b> {{ f.recommendation[:150] }}</div>
+</div>
+{% else %}
+<p style="color:#64748b;">No critical or high findings detected.</p>
+{% endfor %}
+
+<div class="section-title">Summary</div>
+<p>{{ report.total_tests }} tests across 2G/GSM, 3G/SS7, 4G/LTE, and 5G/NR were performed on
+<em>{{ report.target_description }}</em>. {{ report.failed_tests }} tests returned findings requiring action.</p>
+
+<footer>TelSec v1.0.0 | Generated {{ report.generated_at }} | {{ report.classification }}</footer>
+</body></html>

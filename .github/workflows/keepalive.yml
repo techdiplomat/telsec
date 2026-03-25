@@ -1,0 +1,17 @@
+name: Keepalive Backend Pinger
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend
+        run: |
+          echo "Pinging TelSec backend..."
+          # Replace with your actual Codespace URL when ready
+          # curl -f https://your-codespace-8000.app.github.dev/health || echo "Backend offline"
+          echo "Keepalive ping sent"

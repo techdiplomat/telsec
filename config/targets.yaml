@@ -1,0 +1,52 @@
+# TelSec Target Network Configuration
+# ============================================================
+# Define authorized target networks here.
+# Only IPs/ranges listed here will be testable (scope enforcement).
+# ============================================================
+
+authorization:
+  reference_number: ""           # Written authorization ref goes here
+  authorized_by: ""              # Authorizing officer name
+  valid_from: ""                 # ISO 8601 date
+  valid_until: ""                # ISO 8601 date
+  scope_description: "Authorized lab environment only"
+
+# IP scope whitelist — only these ranges are permitted for active tests
+ip_scope:
+  - "192.168.0.0/24"            # Lab network
+  - "10.0.0.0/8"               # Internal test range
+
+# SS7 Gateway targets
+ss7_targets:
+  - label: "Lab SS7 GW"
+    ip: "192.168.1.100"
+    sctp_port: 2905
+    opc: "0000001"
+    dpc: "0000002"
+    mcc: "001"
+    mnc: "01"
+
+# LTE EPC targets
+lte_targets:
+  - label: "Lab MME"
+    ip: "192.168.1.200"
+    s1_port: 36412
+    diameter_realm: "lab.net"
+    mcc: "001"
+    mnc: "01"
+    apn: "lab.apn"
+
+# 5G Core targets
+fiveg_targets:
+  - label: "Lab AMF"
+    ip: "192.168.1.250"
+    ngap_port: 38412
+    nrf_url: "http://192.168.1.250:7777"
+    plmn_mcc: "001"
+    plmn_mnc: "01"
+
+# Test MSISDN/IMSI batch (lab SIMs only)
+test_subscribers:
+  - msisdn: "+10000000001"
+    imsi: "001010000000001"
+    label: "Lab SIM 1"

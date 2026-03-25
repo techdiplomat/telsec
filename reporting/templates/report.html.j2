@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ report.title }} - TelSec</title>
+<style>
+  :root {
+    --primary: #1a1a2e; --secondary: #16213e; --accent: #0f3460;
+    --critical: #dc2626; --high: #ea580c; --medium: #d97706;
+    --low: #2563eb; --info: #6b7280; --pass: #16a34a; --fail: #dc2626;
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --text: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+  .cover { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white;
+    padding: 80px 60px; min-height: 300px; }
+  .cover h1 { font-size: 2.8rem; margin-bottom: 8px; }
+  .cover h2 { font-size: 1.3rem; color: #90caf9; margin-bottom: 30px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px;
+    background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; }
+  .meta-item label { font-size: 0.75rem; color: #90caf9; text-transform: uppercase; }
+  .meta-item span { display: block; font-size: 1rem; font-weight: 600; }
+  .risk-badge { display: inline-block; padding: 8px 24px; border-radius: 20px;
+    font-size: 1.8rem; font-weight: 800; margin-top: 20px; }
+  .risk-high { background: var(--critical); }
+  .risk-medium { background: var(--high); }
+  .risk-low { background: var(--pass); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 30px; }
+  .section { margin-bottom: 48px; }
+  .section-title { font-size: 1.4rem; font-weight: 700; color: var(--primary);
+    padding-bottom: 8px; border-bottom: 3px solid var(--accent); margin-bottom: 20px; }
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--card); border-radius: 10px; padding: 20px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid var(--border); }
+  .stat-card.critical { border-top-color: var(--critical); }
+  .stat-card.high { border-top-color: var(--high); }
+  .stat-card.medium { border-top-color: var(--medium); }
+  .stat-card.low { border-top-color: var(--low); }
+  .stat-card.info { border-top-color: var(--info); }
+  .stat-num { font-size: 2.5rem; font-weight: 800; }
+  .stat-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
+  .critical .stat-num { color: var(--critical); }
+  .high .stat-num { color: var(--high); }
+  .medium .stat-num { color: var(--medium); }
+  .low .stat-num { color: var(--low); }
+  .finding-card { background: var(--card); border-radius: 10px; padding: 20px;
+    margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 5px solid var(--border); }
+  .finding-card.CRITICAL { border-left-color: var(--critical); }
+  .finding-card.HIGH { border-left-color: var(--high); }
+  .finding-card.MEDIUM { border-left-color: var(--medium); }
+  .finding-card.LOW { border-left-color: var(--low); }
+  .finding-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .finding-id { font-family: monospace; font-size: 0.85rem; color: #64748b; }
+  .finding-name { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
+  .sev-badge { padding: 3px 12px; border-radius: 12px; font-size: 0.75rem;
+    font-weight: 700; color: white; }
+  .sev-CRITICAL { background: var(--critical); }
+  .sev-HIGH { background: var(--high); }
+  .sev-MEDIUM { background: var(--medium); }
+  .sev-LOW { background: var(--low); }
+  .sev-INFO { background: var(--info); }
+  .finding-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+  .meta-key { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; }
+  .meta-val { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+  .finding-body { font-size: 0.9rem; line-height: 1.6; }
+  .finding-body strong { color: var(--primary); }
+  .finding-body .rec { background: #f0fdf4; border-left: 3px solid var(--pass);
+    padding: 10px; border-radius: 4px; margin-top: 8px; }
+  .compliance-table { width: 100%; border-collapse: collapse; }
+  .compliance-table th { background: var(--primary); color: white; padding: 10px 14px;
+    text-align: left; font-size: 0.85rem; }
+  .compliance-table td { padding: 9px 14px; border-bottom: 1px solid var(--border);
+    font-size: 0.85rem; }
+  .compliance-table tr:hover { background: #f8fafc; }
+  .status-PASS { color: var(--pass); font-weight: 700; }
+  .status-FAIL { color: var(--fail); font-weight: 700; }
+  .status-NOT_TESTED { color: var(--info); }
+  .status-PARTIAL { color: var(--medium); font-weight: 600; }
+  footer { background: var(--primary); color: #90caf9; text-align: center;
+    padding: 20px; font-size: 0.8rem; margin-top: 60px; }
+  @media print { .cover { -webkit-print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div class="cover">
+  <div style="font-size:0.8rem;color:#90caf9;margin-bottom:6px;">{{ report.classification }}</div>
+  <h1>TelSec</h1>
+  <h2>{{ report.title }}</h2>
+  <div class="meta-grid">
+    <div class="meta-item"><label>Company</label><span>{{ report.company }}</span></div>
+    <div class="meta-item"><label>Auditor</label><span>{{ report.auditor }}</span></div>
+    <div class="meta-item"><label>Date</label><span>{{ report.generated_at }}</span></div>
+    <div class="meta-item"><label>Auth Reference</label><span>{{ report.auth_ref or 'N/A' }}</span></div>
+  </div>
+  {% set rclass = 'risk-high' if report.risk_score >= 60 else ('risk-medium' if report.risk_score >= 30 else 'risk-low') %}
+  <div class="risk-badge {{ rclass }}">Risk Score: {{ report.risk_score }}/100</div>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="section-title">Finding Summary</div>
+    <div class="stats-row">
+      <div class="stat-card critical"><div class="stat-num">{{ report.critical_count }}</div><div class="stat-label">Critical</div></div>
+      <div class="stat-card high"><div class="stat-num">{{ report.high_count }}</div><div class="stat-label">High</div></div>
+      <div class="stat-card medium"><div class="stat-num">{{ report.medium_count }}</div><div class="stat-label">Medium</div></div>
+      <div class="stat-card low"><div class="stat-num">{{ report.low_count }}</div><div class="stat-label">Low</div></div>
+      <div class="stat-card"><div class="stat-num">{{ report.total_tests }}</div><div class="stat-label">Total Tests</div></div>
+    </div>
+  </div>
+
+  <!-- Findings -->
+  {% for sev in ['CRITICAL','HIGH','MEDIUM','LOW'] %}
+  {% set sev_findings = report.findings | selectattr('severity.value','eq',sev) | selectattr('status.value','eq','FAIL') | list %}
+  {% if sev_findings %}
+  <div class="section">
+    <div class="section-title">{{ sev }} Findings ({{ sev_findings|length }})</div>
+    {% for f in sev_findings %}
+    <div class="finding-card {{ f.severity.value }}">
+      <div class="finding-header">
+        <div>
+          <div class="finding-id">{{ f.test_id }} | {{ f.generation }}</div>
+          <div class="finding-name">{{ f.name }}</div>
+        </div>
+        <span class="sev-badge sev-{{ f.severity.value }}">{{ f.severity.value }}</span>
+      </div>
+      <div class="finding-meta">
+        <div><div class="meta-key">CVSS Score</div><div class="meta-val">{{ f.cvss_score }}</div></div>
+        <div><div class="meta-key">CVE</div><div class="meta-val">{{ f.cve or 'N/A' }}</div></div>
+        <div><div class="meta-key">GSMA Ref</div><div class="meta-val">{{ f.gsma_ref or 'N/A' }}</div></div>
+        <div><div class="meta-key">3GPP Ref</div><div class="meta-val">{{ f.threegpp_ref or 'N/A' }}</div></div>
+      </div>
+      <div class="finding-body">
+        <p><strong>Finding:</strong> {{ f.finding }}</p>
+        {% if f.impact %}<p style="margin-top:8px;"><strong>Impact:</strong> {{ f.impact }}</p>{% endif %}
+        {% if f.recommendation %}
+        <div class="rec"><strong>Recommendation:</strong> {{ f.recommendation }}</div>
+        {% endif %}
+        {% if f.raw_output %}
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer;color:#64748b;font-size:0.8rem;">Raw Output</summary>
+          <pre style="margin-top:6px;background:#1e293b;color:#e2e8f0;padding:12px;border-radius:4px;font-size:0.75rem;overflow-x:auto;">{{ f.raw_output[:1500] }}</pre>
+        </details>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- GSMA Compliance Matrix -->
+  <div class="section">
+    <div class="section-title">GSMA Compliance Matrix</div>
+    <table class="compliance-table">
+      <thead>
+        <tr><th>Req. ID</th><th>Document</th><th>Category</th><th>Requirement</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+      {% for item in report.compliance_matrix %}
+      <tr>
+        <td>{{ item.requirement_id }}</td>
+        <td>{{ item.doc }}</td>
+        <td>{{ item.category }}</td>
+        <td>{{ item.requirement }}</td>
+        <td class="status-{{ item.status }}">{{ item.status }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  TelSec v1.0.0 | Generated {{ report.generated_at }} | {{ report.classification }} |
+  For authorized security testing use only
+</footer>
+</body>
+</html>

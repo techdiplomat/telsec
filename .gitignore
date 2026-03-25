@@ -1,0 +1,53 @@
+# TelSec Git Ignore
+# ─────────────────────────────────────────────
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Database & audit logs
+*.db
+*.sqlite
+*.sqlite3
+teleaudit.db
+
+# Reports output
+reports/*.pdf
+reports/*.html
+reports/*.json
+reports/*.csv
+
+# Secrets & credentials
+.env
+*.pem
+*.key
+secrets.yaml
+ngrok.yml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# External tools (cloned by install.sh)
+deps/sigploit/
+deps/ss7maper/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Colab temp
+*.ipynb_checkpoints/

@@ -1,0 +1,92 @@
+# TelSec Global Configuration
+# ============================================================
+# DO NOT hardcode credentials here. Use environment variables
+# for sensitive values. This file defines default settings.
+# ============================================================
+
+app:
+  name: "TelSec"
+  version: "1.0.0"
+  description: "Telecom Security Penetration Testing & Audit Framework"
+  author: "TelSec Security Team"
+  log_level: "INFO"  # DEBUG | INFO | WARNING | ERROR
+
+database:
+  path: "teleaudit.db"
+  firebase_enabled: false
+  firebase_project: ""  # Set via env: FIREBASE_PROJECT
+
+security:
+  authorization_required: true       # Must be true for active tests
+  max_probes_per_second: 10          # Hard rate limit
+  passive_only_default: true         # Default to passive mode
+  audit_log: true                    # Log all actions to SQLite
+  session_timeout_minutes: 60
+
+modules:
+  gen2:
+    enabled: true
+    sdr_device: "rtlsdr"             # rtlsdr | hackrf | usrp_b210
+    bands: ["GSM900", "GSM1800"]
+    scan_duration_seconds: 60
+  gen3:
+    enabled: true
+    ss7_gateway_ip: ""
+    ss7_gateway_port: 2905
+    opc: "0000001"                   # Originating Point Code
+    dpc: "0000002"                   # Destination Point Code
+    ssn: 6                           # Subsystem Number (HLR)
+  gen4:
+    enabled: true
+    mme_ip: ""
+    mme_port: 36412
+    apn: "test.apn"
+    diameter_realm: "example.net"
+    diameter_origin_host: "teleaudit.example.net"
+  gen5:
+    enabled: true
+    amf_ip: ""
+    amf_port: 38412
+    nrf_url: "http://localhost:7777"
+    sba_base_url: "http://localhost"
+    verify_tls: false
+
+reporting:
+  company_name: "TelSec Security"
+  classification: "CONFIDENTIAL"
+  output_dir: "reports/"
+  pdf_enabled: true
+  html_enabled: true
+  json_enabled: true
+  include_pcap_refs: true
+  cvss_version: "3.1"
+
+tools:
+  nmap_path: "nmap"
+  tshark_path: "tshark"
+  grgsm_livemon: "grgsm_livemon"
+  kalibrate: "kal"
+  sigploit_path: "deps/sigploit"
+  ss7maper_path: "deps/ss7maper"
+  srsran_docker_image_4g: "softwareradiosystems/srsran_4g"
+  srsran_docker_image_5g: "softwareradiosystems/srsran-project"
+  open5gs_path: "deps/open5gs"
+  metasploit_path: "msfconsole"
+  nuclei_path: "nuclei"
+
+ngrok:
+  enabled: false
+  auth_token: ""                     # Set via env: NGROK_AUTH_TOKEN
+
+threat_intel:
+  nvd_api_key: ""                    # Set via env: NVD_API_KEY
+  refresh_interval_hours: 1
+  cve_keywords:
+    - "SS7"
+    - "LTE"
+    - "5G"
+    - "Diameter"
+    - "GTP"
+    - "NAS 5G"
+    - "NGAP"
+    - "SIP telecom"

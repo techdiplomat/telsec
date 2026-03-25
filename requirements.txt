@@ -1,0 +1,36 @@
+# Core web UI
+streamlit>=1.32.0
+pyyaml>=6.0
+
+# Data & visualisation
+pandas>=2.1.0
+plotly>=5.18.0
+networkx>=3.2
+
+# Protocol & network
+scapy>=2.5.0
+requests>=2.31.0
+
+# Reporting
+reportlab>=4.1.0
+jinja2>=3.1.0
+
+# 5G SBA API testing (HTTP/2 support)
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# Backend dependencies
+pysctp
+
+httpx[http2]>=0.26.0
+
+# CLI utilities
+rich>=13.7.0
+click>=8.1.0
+
+# System monitoring
+psutil>=5.9.0
+
+# Optional: live CVE feed
+# nvdlib>=0.7.6   # uncomment if you want automated NVD polling

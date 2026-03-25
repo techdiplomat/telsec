@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  # ---- Main TelSec Application ----
+  teleaudit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teleaudit_app
+    ports:
+      - "8501:8501"   # Streamlit UI
+    environment:
+      - TELEAUDIT_DB=/data/teleaudit.db
+      - NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-}
+      - NVD_API_KEY=${NVD_API_KEY:-}
+    volumes:
+      - teleaudit_data:/data
+      - ./reports:/teleaudit/reports
+      - ./config:/teleaudit/config:ro
+    restart: unless-stopped
+    networks:
+      - teleaudit_net
+    depends_on:
+      - open5gs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---- Open5GS (5G Core - optional) ----
+  open5gs:
+    image: gradiant/open5gs:2.7.0
+    container_name: teleaudit_5gc
+    ports:
+      - "3000:3000"   # WebUI
+      - "9999:9999"   # Metrics
+    environment:
+      - SUBSCRIBER_DB=mongodb
+    volumes:
+      - open5gs_data:/var/db/open5gs
+    networks:
+      - teleaudit_net
+    restart: unless-stopped
+    profiles:
+      - "5g"          # Only starts when: docker-compose --profile 5g up
+
+  # ---- srsRAN 4G (LTE simulation - optional) ----
+  srsran_4g:
+    image: softwareradiosystems/srsran_4g:latest
+    container_name: teleaudit_srsran4g
+    privileged: true   # Required for SDR device access
+    network_mode: host
+    volumes:
+      - ./config:/conf:ro
+    restart: unless-stopped
+    profiles:
+      - "4g"
+
+  # ---- srsRAN 5G (NR simulation - optional) ----
+  srsran_5g:
+    image: softwareradiosystems/srsran-project:latest
+    container_name: teleaudit_srsran5g
+    privileged: true
+    network_mode: host
+    volumes:
+      - ./config:/conf:ro
+    restart: unless-stopped
+    profiles:
+      - "5g"
+
+networks:
+  teleaudit_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  teleaudit_data:
+    driver: local
+  open5gs_data:
+    driver: local
