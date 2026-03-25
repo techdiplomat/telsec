@@ -218,6 +218,114 @@ def wake_backend() -> Dict[str, Any]:
     }
 
 
+# ── Demo output generator ─────────────────────────────────────────────────────
+def _demo_output(tool: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Return realistic simulated stdout for any tool so that the UI shows
+    useful demo data when the Kali backend is offline or unreachable.
+    """
+    _DEMO_OUTPUTS: Dict[str, str] = {
+        "nmap": (
+            "Starting Nmap 7.94 (https://nmap.org)\n"
+            "Nmap scan report for 10.0.0.1\n"
+            "PORT     STATE SERVICE  VERSION\n"
+            "22/tcp   open  ssh      OpenSSH 8.9\n"
+            "8000/tcp open  http     uvicorn/FastAPI\n"
+            "2905/tcp open  sctp     SIGTRAN M3UA\n"
+            "3868/tcp open  diameter Diameter base protocol\n"
+            "Nmap done: 1 IP address (1 host up) scanned in 8.42 seconds\n"
+            "[SIMULATION MODE — connect Kali backend for live results]"
+        ),
+        "gtscan": (
+            "GTScan v1.2 — Global Title Enumerator\n"
+            f"Target prefix: {params.get('prefix','9190')} | SSN: {params.get('ssn','6 (HLR)')}\n"
+            "[+] 919000000006  →  HLR RESPONDING  (MAP-SAI accepted)\n"
+            "[+] 919000001006  →  HLR RESPONDING  (SRI-SM accepted)\n"
+            "[-] 919000002006  →  TIMEOUT\n"
+            "[+] 919000003006  →  MSC RESPONDING  (MAP-PRN accepted)\n"
+            "Scan complete. 3/4 GTs reached. [SIMULATION MODE]"
+        ),
+        "scapy-ss7": (
+            f"Scapy-SS7 MAP {params.get('operation','ATI')} Probe\n"
+            f"  Src GT: {params.get('src_gt','441234567890')}\n"
+            f"  Dst GT: {params.get('gt','919000000006')}\n"
+            f"  MSISDN: {params.get('msisdn','+919999999999')}\n\n"
+            "MAP ATI Response received:\n"
+            "  Subscriber State: assumedIdle\n"
+            "  Location Info: VLR-GT=+919100000001, LAC=0x1234, CellId=0x5678\n"
+            "  SubscriberInfo PRESENT — location successfully disclosed\n"
+            "[SIMULATION MODE — connect Kali backend for live execution]"
+        ),
+        "sctpscan": (
+            f"SCTPScan on {params.get('target','10.0.0.0/24')}:\n"
+            "10.0.0.5:2905  OPEN (M3UA)\n"
+            "10.0.0.7:2905  OPEN (M3UA)\n"
+            "10.0.0.12:9900 OPEN (SUA)\n"
+            "[SIMULATION MODE]"
+        ),
+        "sigploit": (
+            f"SigPloit {params.get('mode','ss7')} mode\n"
+            f"Target: {params.get('target','-')}\n"
+            "sendRoutingInfo response: IMSI resolved, VLR-address: +919100000001\n"
+            "[SIMULATION MODE — connect Kali backend for live execution]"
+        ),
+        "tshark": (
+            f"Capturing on {params.get('interface','eth0')} for {params.get('duration',10)}s\n"
+            "Frame 1: M3UA (TRANSFER) 148 bytes\n"
+            "Frame 2: SCCP (UDT) CR to SSN=6 (HLR)\n"
+            "Frame 3: TCAP Begin / MAP sendRoutingInfo\n"
+            "Frame 4: TCAP End / MAP sendRoutingInfo-Res\n"
+            "4 packets captured. [SIMULATION MODE]"
+        ),
+        "sigshark": (
+            "SigShark PCAP Analysis\n"
+            "Found 3 MAP operations: SRI-SM x2, ATI x1\n"
+            "GSMA FS.11 Cat.1 violation: ATI without authentication detected\n"
+            "[SIMULATION MODE]"
+        ),
+        "nuclei": (
+            f"[nuclei] Scanning {params.get('target','-')}\n"
+            "[CVE-2023-XXXX] [high] HTTP header injection detected\n"
+            "[exposed-api] [medium] OpenAPI schema exposed at /openapi.json\n"
+            "2 findings. [SIMULATION MODE]"
+        ),
+        "5gbasechecker": (
+            "5GBaseChecker NAS Security Audit\n"
+            "[!] 5G-EA0 accepted in Security Mode Command — CRITICAL\n"
+            "[!] SUCI null-scheme detected — IMSI exposed in Registration Request\n"
+            "[+] GUTI reallocation after each registration: OK\n"
+            "[SIMULATION MODE]"
+        ),
+        "gr-gsm": (
+            "gr-gsm livemon: Capturing on hackrf\n"
+            "Detected ARFCN 1 (935.2 MHz) — GSM900\n"
+            "Frame decode: SDCCH Ciphering Mode Command: A5/1\n"
+            "Frame decode: IMMEDIATE ASSIGNMENT on AGCH\n"
+            "[SIMULATION MODE — SDR hardware required for live capture]"
+        ),
+        "osmocom": (
+            "OsmocomBB MS side capture started\n"
+            "L1: synchronized to ARFCN 1 (935.2 MHz)\n"
+            "L2: SABM sent on SDCCH/4\n"
+            "[SIMULATION MODE]"
+        ),
+    }
+    stdout = _DEMO_OUTPUTS.get(
+        tool,
+        f"[{tool}] Simulated run | params: {params}\n"
+        "Backend offline — connect Kali backend for live results.\n"
+        "[SIMULATION MODE]"
+    )
+    return {
+        "success": True,
+        "stdout": stdout,
+        "stderr": "",
+        "returncode": 0,
+        "error": None,
+        "_demo": True,
+    }
+
+
 # ── Tool execution ─────────────────────────────────────────────────────────────
 def run_tool(
     tool: str,
@@ -244,17 +352,12 @@ def run_tool(
         "stderr": "",
         "returncode": -1,
         "error": None,
+        "_demo": False,
     }
 
     if not base:
-        # Demo mode — return informative message instead of an error
-        result["stdout"] = (
-            f"[Demo Mode] Tool: {tool}\n"
-            "Kali backend is offline. Set KALI_API_URL in Streamlit Secrets\n"
-            "to enable real execution. Showing simulated output."
-        )
-        result["returncode"] = 0
-        result["success"] = True
+        # No URL configured — pure demo mode
+        result.update(_demo_output(tool, params))
         return result
 
     try:
@@ -272,19 +375,15 @@ def run_tool(
                 "stderr": data.get("stderr", ""),
                 "returncode": data.get("returncode", -1),
             })
-        elif resp.status_code == 404:
-            result["error"] = (
-                f"Tool endpoint '{endpoint}' not found on Kali API. "
-                "Server may need updating."
-            )
         elif resp.status_code == 403:
             result["error"] = "API key rejected — check TELSEC_API_KEY in Streamlit Secrets"
         else:
-            result["error"] = f"HTTP {resp.status_code}: {resp.text[:200]}"
-    except requests.exceptions.Timeout:
-        result["error"] = f"Tool timed out after {timeout}s"
-    except requests.exceptions.ConnectionError:
-        result["error"] = "Cannot reach Kali backend — start with: docker start telsec-kali"
+            # 404 or any other non-200: backend is up but endpoint missing / asleep
+            # Fall back to demo output so users see realistic simulated data
+            result.update(_demo_output(tool, params))
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        # Backend is asleep or unreachable — use demo output, don't show raw error
+        result.update(_demo_output(tool, params))
     except Exception as exc:
         result["error"] = str(exc)
 
@@ -407,14 +506,36 @@ def render_tool_result(result: Dict[str, Any], tool_name: str = "Tool") -> None:
         st.error(f"❌ **{tool_name} Error:** {result['error']}")
         return
 
-    rc = result.get("returncode", -1)
-    if rc == 0:
-        st.success(f"✅ **{tool_name}** completed successfully (exit code 0)")
+    is_demo = result.get("_demo", False)
+
+    if is_demo:
+        # Amber simulation badge — not a success, not an error
+        st.markdown(
+            f"""
+            <div style='display:flex;align-items:center;gap:10px;padding:8px 16px;
+                 background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);
+                 border-radius:8px;margin-bottom:8px;'>
+              <span style='font-size:1rem;'>📶</span>
+              <span style='font-size:0.82rem;color:#f59e0b;font-weight:600'>
+                {tool_name} — Simulation Mode
+              </span>
+              <span style='font-size:0.75rem;color:#64748b;margin-left:4px;'>
+                Kali backend offline. Connect backend for live results.
+              </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
-        st.warning(f"⚠️ **{tool_name}** exited with code {rc}")
+        rc = result.get("returncode", -1)
+        if rc == 0:
+            st.success(f"✅ **{tool_name}** completed successfully (exit code 0)")
+        else:
+            st.warning(f"⚠️ **{tool_name}** exited with code {rc}")
 
     if result.get("stdout"):
-        with st.expander("📤 stdout", expanded=True):
+        label = "💻 Simulated Output" if is_demo else "📤 stdout"
+        with st.expander(label, expanded=True):
             st.code(result["stdout"], language="text")
     if result.get("stderr"):
         with st.expander("📥 stderr / warnings"):
