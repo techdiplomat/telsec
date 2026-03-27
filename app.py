@@ -498,6 +498,7 @@ with st.sidebar:
             "Compliance Mapper", "Recon & Intelligence",
         ]),
         ("🔬 ANALYSIS TOOLS", ["Protocol Fuzzing"]),
+        ("📚 TOOLS CATALOG", ["Tools Catalog"]),
         ("⚙️ SYSTEM", ["Tools & Environment"]),
     ]
 
@@ -512,6 +513,7 @@ with st.sidebar:
         "Threat Intel": "🛡️", "Threat Detection": "🔍",
         "Compliance Mapper": "📋", "Recon & Intelligence": "🔎",
         "Protocol Fuzzing": "🎯",
+        "Tools Catalog": "📚",
         "Tools & Environment": "🛠️",
     }
 
@@ -1114,6 +1116,9 @@ _PAGE_MODULE_MAP = {
     
     # Analysis Tools
     "Protocol Fuzzing":     "pages.4_protocol_fuzzing",
+    
+    # Tools Catalog
+    "Tools Catalog":        "pages.21_tools_catalog",
 
     # System
     "Tools & Environment":  "pages.20_tools_environment",
